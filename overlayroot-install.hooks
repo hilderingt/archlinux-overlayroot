@@ -1,0 +1,5 @@
+#!/bin/sh
+
+build() {
+  add_runscript
+}
