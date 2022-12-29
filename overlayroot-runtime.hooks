@@ -57,12 +57,12 @@ run_latehook() {
 	for opt in ${overlayroot//:/ }
 	do
 		case "${opt}" in
+			tmpfs=*)
+				mnts_overlay="${opt#tmpfs=}"
+				;;
 			ro=*)
 				mnts_rdonly="${opt#ro=}"
 				;;			
-			ovl=*)
-				mnts_overlay="${opt#ovl=}"
-				;;
 			*)
 				;;
 		esac
