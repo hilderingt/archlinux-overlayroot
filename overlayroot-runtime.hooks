@@ -1,9 +1,24 @@
 #!/bin/sh
 
+# Copyright 2022 Tim Hildering
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 OVLROOT_INITRD_DIR="/.overlay"
 OVLROOT_SYSTEM_DIR="/new_root/.overlay"
 
-ovlroot_make_fs_readonly() {
+fsopts_add_ro() {
 	local fsopts=${1}, fsopts_ro="ro"
 	local opt=""
 
@@ -25,63 +40,10 @@ ovlroot_make_fs_readonly() {
 	printf "%s" "${fsopts_ro}"
 }
 
-ovlroot_parse_fstab() {
-	local fstab=${1} mnt_rdonly=${2} mnt_overlay=${3} fstab_new=${4}
-	local fstab_ovl=${5}
-	local line=""
-
-	while IFS= read -r line
-	do
-		local fs="" fsdir="" fstype="" fsopts=""
-		local fsdump="" fspass="" error=""
-		local var="" mnt=""
-
-		line=${line%%#*}
-
-		[  "x${line}" = "x" ] && continue
-
-		read -r fs fsdir fstype fsopts fsdump fspass error <<-EOF
-		${line}
-		EOF
-
-		[ "x${fspass}" = "x" ] || [ "x${error}" != "x" ] && continue
-
-		var="${fstab_new}"
-
-		for mnt in ${mnt_overlay}
-		do
-			if [ "${mnt}" = "${fsdir}" ]
-			then
-				fsopts="$(ovlroot_make_fs_readonly "${fsopts}")"
-				var="${fstab_ovl}"
-				fsdump=0; fspass=0
-				break
-			fi
-		done
-
-		if [ "${var}" = "${fstab_new}" ]
-		then
-			for mnt in ${mnt_rdonly}
-			do
-				if [ "${mnt}" = "${fsdir}" ]
-				then
-					fsopts="$(ovlroot_make_fs_readonly "${fsopts}")"
-					fspass=0
-					break
-				fi
-			done
-		fi
-
-		eval ${var}="\"\${${var}}
-
-${fs}	${fsdir}	${fstype}	${fsopts}	${fsdump}	${fspass}\""
-	done <"${fstab}"
-}
-
 run_latehook() {
-	local fs="" fsdir="" fstype="" fsopts="" fsdump="" fspass=""
-	local opts="" overlay="" rdonly=""
-	local fsopts_root="ro" fstab="/etc/fstab"
+	local line="" opts="" mnts_overlay="" mnts_rdonly=""
+	local fsopts_root="ro" fstab="/etc/fstab" 
+	local fstab_tmp="/tmp/overlayroot.fstab"
 
 	[ "x${overlayroot}" = "x" ] && return
 
@@ -89,76 +51,112 @@ run_latehook() {
 	do
 		case "${opt}" in
 			ovl=*)
-				overlay="${opt#ovl=}"
+				mnts_overlay="${opt#ovl=}"
 				;;
 			ro=*)
-				rdonly="${opt#ro=}"
+				mnts_rdonly="${opt#ro=}"
 				;;
 			*)
 				;;
 		esac
 	done
 
-	ovlroot_parse_fstab "/new_root/${fstab}" "${rdonly//,/ }" \
-	"/ ${overlay//,/ }" "OVLROOT_MNTS_FSTAB" "OVLROOT_MNTS_OVERLAY"
-
 	mkdir -p "${OVLROOT_INITRD_DIR}"
 	mount -t "tmpfs" "overlayroot-tmpfs" "${OVLROOT_INITRD_DIR}"
-
+	
 	mkdir -p "${OVLROOT_INITRD_DIR}/lower"
 	mkdir -p "${OVLROOT_INITRD_DIR}/upper/root"
 	mkdir -p "${OVLROOT_INITRD_DIR}/work/root"
-	mount -o "move" "/new_root" "${OVLROOT_INITRD_DIR}/lower"
 
+	mount -o "move" "/new_root" "${OVLROOT_INITRD_DIR}/lower"
 	mount -t "overlay" -o \
-"lowerdir=${OVLROOT_INITRD_DIR}/lower,\
+	"lowerdir=${OVLROOT_INITRD_DIR}/lower,\
 upperdir=${OVLROOT_INITRD_DIR}/upper/root,\
 workdir=${OVLROOT_INITRD_DIR}/work/root" "overlayroot" "/new_root"
 
-	while read -r fs fsdir fstype fsopts fsdump fspass
+	while IFS= read -r line
 	do
-		local cnt=0 basedir=""
+		local fs="" fsdir="" fstype="" fsopts="" fsdump="" fspass=""
+		local error="" mnt="" basedir=""
+		local cnt=0 limit=10 line_tmp="${line%%#*}"
 
-		[ "x${fs}" = "x" ] && continue
+		[  "x${line_tmp}" = "x" ] && { echo "${line}"; continue; }
+
+		read -r fs fsdir fstype fsopts fsdump fspass error <<-EOF
+		${line_tmp}
+		EOF
+
+		if [ "x${fs}" != "x" ]
+		then
+			if [ "x${fsopts}" = "x" ] || [ "x${error}" != "x" ]
+			then
+				printf "%s\n%s\n" "entry deactivated by overlayroot" \
+				       "# ${line}"
+				continue
+			fi
+		else
+			echo "${line}"
+		 	continue
+		fi
 
 		if [ "${fsdir}" = "/" ]
 		then
-			fsopts_root=${fsopts}
+			fsopts_root="$(fsopts_add_ro "${fsopts}")"
+			printf "%s\n%s\n" "entry deactivated by overlayroot" \
+			       "# ${line}"
 			continue
 		fi
 
-		basedir="$(basename "${fsdir}")"
-
-		while [ -d "${OVLROOT_INITRD_DIR}/upper/${basedir}" ]
+		for mnt in ${mnts_overlay//,/ }
 		do
-			basedir="${basedir}$((cnt++))"
-		done	
+			if [ "${mnt}" = "${fsdir}" ]
+			then
+				basedir="$(basename "${fsdir}")"
 
-		mkdir -p "${OVLROOT_INITRD_DIR}/upper/${basedir}"
-		mkdir -p "${OVLROOT_INITRD_DIR}/work/${basedir}"
+				while [ -d "${OVLROOT_INITRD_DIR}/upper/${basedir}" ]
+				do
+					[ ${cnt} -ge ${limit} ] && return 1
+					basedir="${basedir}$((++cnt))"
+				done	
 
-		mount -t "${fstype}" -o "${fsopts}" "${fs}" \
-		"${OVLROOT_INITRD_DIR}/lower/${fsdir}"
-		mount -t "overlay" -o \
-"lowerdir=${OVLROOT_INITRD_DIR}/lower/${fsdir},\
+				mkdir -p "${OVLROOT_INITRD_DIR}/upper/${basedir}"
+				mkdir -p "${OVLROOT_INITRD_DIR}/work/${basedir}"
+
+				fsopts="$(fsopts_add_ro "${fsopts}")"
+
+				mount -t "${fstype}" -o "${fsopts}" "${fs}" \
+				"${OVLROOT_INITRD_DIR}/lower/${fsdir}"
+				mount -t "overlay" -o \
+				"lowerdir=${OVLROOT_INITRD_DIR}/lower/${fsdir},\
 upperdir=${OVLROOT_INITRD_DIR}/upper/${basedir},\
-workdir=${OVLROOT_INITRD_DIR}/work/${basedir}" \
-		"overlay-${basedir}" "/new_root/${fsdir}"
-	done <<-EOF
-	${OVLROOT_MNTS_OVERLAY}
-	EOF
+workdir=${OVLROOT_INITRD_DIR}/work/${basedir}" "overlay-${basedir}" \
+				"/new_root/${fsdir}"
 
-	if [ "x${OVLROOT_MNTS_FSTAB}" != "x" ]
-	then
-		cat >"/new_root/${fstab}" <<-EOF
-		# generated by overlayroot
+				printf "%s\n%s\n" "entry deactivated by overlayroot" \
+				       "#${line}"
+				continue 2
+			fi
+		done
 
-		${OVLROOT_MNTS_FSTAB}
-		EOF
-	fi
+		for mnt in ${mnts_rdonly//,/ }
+		do
+			if [ "${mnt}" = "${fsdir}" ]
+			then
+				printf "%s\n%s\n" "original entry modified by overlayroot" \
+				       "# ${line}"
+				fsopts="$(fsopts_add_ro "${fsopts}")"
+				fspass=0
+				break
+			fi
+		done
+
+		printf "%s\t%s\t%s\t%s\t%s\t%s\n" \
+		"${fs}" "${fsdir}" "${fstype}" "${fsopts}" "${fsdump}" "${fspass}"
+	done <"/new_root/${fstab}" >"${fstab_tmp}"
 
 	mkdir -p "${OVLROOT_SYSTEM_DIR}"
 	mount -o "move" "${OVLROOT_INITRD_DIR}" "${OVLROOT_SYSTEM_DIR}"
 	mount -o "remount,${fsopts_root}" "${OVLROOT_SYSTEM_DIR}/lower"
+	mv "${fstab_tmp}" "/new_root/${fstab}"
 }
 
