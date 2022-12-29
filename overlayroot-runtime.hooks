@@ -18,6 +18,13 @@
 OVLROOT_INITRD_DIR="/.overlay"
 OVLROOT_SYSTEM_DIR="/new_root/.overlay"
 
+comment() {
+    while [ ${#} -gt 0 ]
+    do
+        echo "# ${1}"; shift 1
+    done
+}
+
 fsopts_add_ro() {
 	local fsopts=${1}, fsopts_ro="ro"
 	local opt=""
@@ -45,16 +52,16 @@ run_latehook() {
 	local fsopts_root="ro" fstab="/etc/fstab" 
 	local fstab_tmp="/tmp/overlayroot.fstab"
 
-	[ "x${overlayroot}" = "x" ] && return
+	[ ${#overlayroot} -eq 0 ] && return 0
 
 	for opt in ${overlayroot//:/ }
 	do
 		case "${opt}" in
-			ovl=*)
-				mnts_overlay="${opt#ovl=}"
-				;;
 			ro=*)
 				mnts_rdonly="${opt#ro=}"
+				;;			
+			ovl=*)
+				mnts_overlay="${opt#ovl=}"
 				;;
 			*)
 				;;
@@ -80,30 +87,27 @@ workdir=${OVLROOT_INITRD_DIR}/work/root" "overlayroot" "/new_root"
 		local error="" mnt="" basedir=""
 		local cnt=0 limit=10 line_tmp="${line%%#*}"
 
-		[  "x${line_tmp}" = "x" ] && { echo "${line}"; continue; }
+		[ ${#line_tmp} -eq 0 ] && { echo "${line}"; continue; }
 
 		read -r fs fsdir fstype fsopts fsdump fspass error <<-EOF
 		${line_tmp}
 		EOF
 
-		if [ "x${fs}" != "x" ]
+		if [ ${#fs} -gt 0 ]
 		then
-			if [ "x${fsopts}" = "x" ] || [ "x${error}" != "x" ]
+			if [ ${#fsopts} -eq 0 ] || [ ${#error} -ne 0 ]
 			then
-				printf "%s\n%s\n" "entry deactivated by overlayroot" \
-				       "# ${line}"
+				add_comment "entry deactivated by overlayroot" "${line}"
 				continue
 			fi
 		else
-			echo "${line}"
-		 	continue
+			echo; continue
 		fi
 
 		if [ "${fsdir}" = "/" ]
 		then
 			fsopts_root="$(fsopts_add_ro "${fsopts}")"
-			printf "%s\n%s\n" "entry deactivated by overlayroot" \
-			       "# ${line}"
+			add_comment "entry deactivated by overlayroot" "${line}"
 			continue
 		fi
 
@@ -115,7 +119,7 @@ workdir=${OVLROOT_INITRD_DIR}/work/root" "overlayroot" "/new_root"
 
 				while [ -d "${OVLROOT_INITRD_DIR}/upper/${basedir}" ]
 				do
-					[ ${cnt} -ge ${limit} ] && return 1
+					(( ${cnt} >= ${limit} )) && return 1
 					basedir="${basedir}$((++cnt))"
 				done	
 
@@ -132,8 +136,7 @@ upperdir=${OVLROOT_INITRD_DIR}/upper/${basedir},\
 workdir=${OVLROOT_INITRD_DIR}/work/${basedir}" "overlay-${basedir}" \
 				"/new_root/${fsdir}"
 
-				printf "%s\n%s\n" "entry deactivated by overlayroot" \
-				       "#${line}"
+				add_comment "entry deactivated by overlayroot" "${line}"
 				continue 2
 			fi
 		done
@@ -142,8 +145,8 @@ workdir=${OVLROOT_INITRD_DIR}/work/${basedir}" "overlay-${basedir}" \
 		do
 			if [ "${mnt}" = "${fsdir}" ]
 			then
-				printf "%s\n%s\n" "original entry modified by overlayroot" \
-				       "# ${line}"
+				add_comment "original entry modified by overlayroot" \
+				            "${line}"
 				fsopts="$(fsopts_add_ro "${fsopts}")"
 				fspass=0
 				break
