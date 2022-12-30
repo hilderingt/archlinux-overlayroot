@@ -23,16 +23,17 @@ write access is not needed and you want to protect it against changes.
 ## 2. Configuration
 
 ### 2.1 Initramfs
-- add _overlay_ to __MODULES__ array in mkinitcpio.conf (in case support for OverlayFS
+- add `overlay` to __MODULES__ array in mkinitcpio.conf (in case support for OverlayFS
   is not statically compiled into your kernel)
-- add _overlayroot_ to the end of __HOOKS__ array in mkinitcpio.conf
+- add `overlayroot` to the end of __HOOKS__ array in mkinitcpio.conf
 - update initramfs with `mkinitcpio -P`
 
 ### 2.2 Kernel command line
-- add _overlayroot_ to your kernel command line
+- add `overlayroot` to your kernel command line
 - optional:
-	- add _tmpfs=/\<path\>/\<to\>/\<mountpoint\>,..._ to __overlayroot=...__ to overlay
+	- add `tmpfs=/<path>/<to>/<mountpoint>,...` to `overlayroot=...` to overlay
 	  these filesystems with a tmpfs filesystem
-	- add _ro=/\<path\>/\<to\>/\<mountpoint\>,..._ to __overlayroot=...__ to mount these
+	- add `ro=/<path>/<to>/<mountpoint>,...` to `overlayroot=...` to mount these
 	  filesystems read-only
-	- complete example __overlayroot=tmpfs=/usr,ro=/boot,/boot/efi__
+	- separate both options with a `:`
+	- complete example: `overlayroot=tmpfs=/usr:ro=/boot,/boot/efi`
