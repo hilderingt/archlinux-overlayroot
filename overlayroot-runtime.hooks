@@ -85,12 +85,12 @@ workdir=${OVLROOT_INITRD_DIR}/work/root" "overlayroot" "/new_root"
 	do
 		local fs="" fsdir="" fstype="" fsopts="" fsdump="" fspass=""
 		local error="" mnt="" basedir=""
-		local cnt=0 limit=10 line_tmp="${line%%#*}"
+		local cnt=0 limit=10 _line="${line%%#*}"
 
-		[ ${#line_tmp} -eq 0 ] && { echo "${line}"; continue; }
+		[ ${#_line} -eq 0 ] && { echo "${line}"; continue; }
 
 		read -r fs fsdir fstype fsopts fsdump fspass error <<-EOF
-		${line_tmp}
+		${_line}
 		EOF
 
 		if [ ${#fs} -gt 0 ]
@@ -119,8 +119,8 @@ workdir=${OVLROOT_INITRD_DIR}/work/root" "overlayroot" "/new_root"
 
 				while [ -d "${OVLROOT_INITRD_DIR}/upper/${basedir}" ]
 				do
-					(( ${cnt} >= ${limit} )) && return 1
-					basedir="${basedir}$((++cnt))"
+					[ ${cnt} -gt ${limit} ] && return 1
+					basedir="${basedir}$((cnt=cnt+1))"
 				done	
 
 				mkdir -p "${OVLROOT_INITRD_DIR}/upper/${basedir}"
@@ -162,4 +162,3 @@ workdir=${OVLROOT_INITRD_DIR}/work/${basedir}" "overlay-${basedir}" \
 	mount -o "remount,${fsopts_root}" "${OVLROOT_SYSTEM_DIR}/lower"
 	mv "${fstab_tmp}" "/new_root/${fstab}"
 }
-
