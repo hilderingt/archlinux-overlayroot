@@ -26,8 +26,10 @@ depends=(
 source=(
   'overlayroot-install.hooks'
   'overlayroot-runtime.hooks'
+  'mount.overlayroot'
 )
 sha256sums=(
+  'SKIP'
   'SKIP'
   'SKIP'
 )
@@ -39,4 +41,5 @@ build() {
 package() {
   install -Dm644 "$srcdir/overlayroot-install.hooks" "$pkgdir/usr/lib/initcpio/install/overlayroot"
   install -Dm644 "$srcdir/overlayroot-runtime.hooks" "$pkgdir/usr/lib/initcpio/hooks/overlayroot"
+  install -Dm644 "$srcdir/mount.overlayroot" "$pkgdir/usr/sbin/mount.overlayroot"
 }
