@@ -12,11 +12,11 @@ write access is not needed and you want to protect it against changes.
 #### 1.1 Building Package
 - change your current working directory to the directory containing the files
   of the repository
-- run command: makepkg
+- run `makepkg`
 
 #### 1.2 Install Package
 - build or download package
-- run command: pacman -U /path/to/overlayroot-<version>-any.pkg.tar.zst
+- run `pacman -U /\<path\>/\<to\>/overlayroot-<version>-any.pkg.tar.zst`
 
 ### 2. Configuration
 
@@ -24,14 +24,14 @@ write access is not needed and you want to protect it against changes.
 - add 'overlay' to MODULES in mkinitcpio.conf (in case support for OverlayFS is
   not statically compiled into your kernel)
 - add 'overlayroot' to the end of HOOKS array in mkinitcpio.conf
-- recreate initramfs with command: mkinitcpio -P
+- update initramfs with `mkinitcpio -P`
 
 #### 2.2 Kernel command line
 - add 'overlayroot' to your kernel command line
 - optional:
-	- add 'tmpfs=/<path>/<to>/<mountpoint>,...' to 'overlayroot=...' to overlay
+	- add 'tmpfs=/\<path\>/\<to\>/\<mountpoint\>,...' to 'overlayroot=...' to overlay
 	  this filesystem with a tmpfs filesystem
-	- add 'ro=/<path>/<to>/<mountpoint>,...' to 'overlayroot=...' to mount this
+	- add 'ro=/\<path\>/\<to\>/\<mountpoint\>,...' to 'overlayroot=...' to mount this
 	  filesystem read-only
-	- complete example: overlayroot=tmpfs=/opt,ro=/boot,/boot/efi
+	- complete example 'overlayroot=tmpfs=/opt,ro=/boot,/boot/efi'
 
