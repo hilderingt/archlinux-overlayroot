@@ -41,5 +41,5 @@ build() {
 package() {
   install -Dm644 "$srcdir/overlayroot-install.hooks" "$pkgdir/usr/lib/initcpio/install/overlayroot"
   install -Dm644 "$srcdir/overlayroot-runtime.hooks" "$pkgdir/usr/lib/initcpio/hooks/overlayroot"
-  install -Dm644 "$srcdir/mount.overlayroot" "$pkgdir/usr/sbin/mount.overlayroot"
+  install -Dm755 "$srcdir/mount.overlayroot" "$pkgdir/usr/bin/mount.overlayroot"
 }

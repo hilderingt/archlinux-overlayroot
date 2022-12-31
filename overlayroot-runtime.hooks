@@ -17,12 +17,15 @@
 
 OVLROOT_INITRD_DIR="/.overlay"
 OVLROOT_SYSTEM_DIR="/new_root/.overlay"
+OVLROOT_LOWER_DIR="ro"
+OVLROOT_UPPER_DIR="rw"
+OVLROOT_WORK_DIR="work"
 
-comment() {
-    while [ ${#} -gt 0 ]
-    do
-        echo "# ${1}"; shift 1
-    done
+add_comments() {
+	while [ ${#} -gt 0 ]
+	do
+   		 echo "# ${1}"; shift 1
+	done
 }
 
 fsopts_add_ro() {
@@ -71,16 +74,17 @@ run_latehook() {
 	mkdir -p "${OVLROOT_INITRD_DIR}"
 	mount -t "tmpfs" "overlayroot-tmpfs" "${OVLROOT_INITRD_DIR}"
 	
-	mkdir -p "${OVLROOT_INITRD_DIR}/lower"
-	mkdir -p "${OVLROOT_INITRD_DIR}/upper/root"
-	mkdir -p "${OVLROOT_INITRD_DIR}/work/root"
+	mkdir -p "${OVLROOT_INITRD_DIR}/${OVLROOT_LOWER_DIR}"
+	mkdir -p "${OVLROOT_INITRD_DIR}/${OVLROOT_UPPER_DIR}/root"
+	mkdir -p "${OVLROOT_INITRD_DIR}/${OVLROOT_WORK_DIR}/root"
 
-	mount -o "move" "/new_root" "${OVLROOT_INITRD_DIR}/lower"
+	mount -o "move" "/new_root" "${OVLROOT_INITRD_DIR}/${OVLROOT_LOWER_DIR}"
 
 	mount -t "overlay" -o \
-	"lowerdir=${OVLROOT_INITRD_DIR}/lower,\
-upperdir=${OVLROOT_INITRD_DIR}/upper/root,\
-workdir=${OVLROOT_INITRD_DIR}/work/root" "overlayroot" "/new_root"
+	"lowerdir=${OVLROOT_INITRD_DIR}/${OVLROOT_LOWER_DIR},\
+upperdir=${OVLROOT_INITRD_DIR}/${OVLROOT_UPPER_DIR}/root,\
+workdir=${OVLROOT_INITRD_DIR}/${OVLROOT_WORK_DIR}root" \
+	"overlayroot" "/new_root"
 
 	while IFS= read -r line
 	do
@@ -98,7 +102,7 @@ workdir=${OVLROOT_INITRD_DIR}/work/root" "overlayroot" "/new_root"
 		then
 			if [ ${#fsopts} -eq 0 ] || [ ${#error} -ne 0 ]
 			then
-				add_comment "deactivated by overlayroot" "${line}"
+				add_comments "deactivated by overlayroot" "${line}"
 				continue
 			fi
 		else
@@ -110,7 +114,7 @@ workdir=${OVLROOT_INITRD_DIR}/work/root" "overlayroot" "/new_root"
 		if [ "${fsdir}" = "/" ]
 		then
 			fsopts_root="${fsopts_ro}"
-			add_comment "deactivated by overlayroot" "${line}"
+			add_comments "deactivated by overlayroot" "${line}"
 			continue
 		fi
 
@@ -118,7 +122,7 @@ workdir=${OVLROOT_INITRD_DIR}/work/root" "overlayroot" "/new_root"
 		do
 			if [ "${mnt}" = "${fsdir}" ]
 			then
-				add_comment "modified by overlayroot" "${line}"
+				add_comments "modified by overlayroot" "${line}"
 				fstype="overlayroot.${fstype}"
 				fsopts="${fsopts_ro}"								
 			fi
@@ -128,7 +132,7 @@ workdir=${OVLROOT_INITRD_DIR}/work/root" "overlayroot" "/new_root"
 		do
 			if [ "${mnt}" = "${fsdir}" ]
 			then
-				add_comment "modified by overlayroot" "${line}"
+				add_comments "modified by overlayroot" "${line}"
 				fsopts="${fsopts_ro}"
 				fspass=0; break
 			fi
@@ -140,6 +144,6 @@ workdir=${OVLROOT_INITRD_DIR}/work/root" "overlayroot" "/new_root"
 
 	mkdir -p "${OVLROOT_SYSTEM_DIR}"
 	mount -o "move" "${OVLROOT_INITRD_DIR}" "${OVLROOT_SYSTEM_DIR}"
-	mount -o "remount,${fsopts_root}" "${OVLROOT_SYSTEM_DIR}/lower"
+	mount -o "remount,${fsopts_root}" "${OVLROOT_SYSTEM_DIR}/${OVLROOT_LOWER_DIR}"
 	mv "${fstab_tmp}" "/new_root/${fstab}"
 }

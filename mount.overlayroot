@@ -23,7 +23,11 @@ MOUNT_FSOPTIONS=""
 MOUNT_OPTIONS=""
 MOUNT_FSTYPE=""
 
-OVLROOT_DIR="/.overlay"
+OVLROOT_MAINDIR="/.overlay"
+OVLROOT_LOWER_DIR="ro"
+OVLROOT_UPPER_DIR="rw"
+OVLROOT_WORK_DIR="work"
+
 BASEDIR=""
 LIMIT=10
 CNT=0
@@ -57,22 +61,22 @@ done
 
 BASEDIR="$(basename "${MOUNT_FSDIR}")"
 
-while [ -d "${OVLROOT_DIR}/upper/${BASEDIR}" ]
+while [ -d "${OVLROOT_MAINDIR}/upper/${BASEDIR}" ]
 do
 	[ ${CNT} -gt ${LIMIT} ] && exit 1
 	BASEDIR="${BASEDIR}$((CNT=CNT+1))"
 done
 
-mkdir -p "${OVLROOT_DIR}/upper/${BASEDIR}"
-mkdir -p "${OVLROOT_DIR}/work/${BASEDIR}"
+mkdir -p "${OVLROOT_MAINDIR}/${OVLROOT_UPPER_DIR}/${BASEDIR}"
+mkdir -p "${OVLROOT_MAINDIR}/${OVLROOT_WORK_DIR}/${BASEDIR}"
 
 mount ${MOUNT_OPTIONS} -t "${MOUNT_FSTYPE}" -o "${MOUNT_FSOPTIONS}" \
-"${MOUNT_FS}" "${OVLROOT_DIR}/lower/${MOUNT_FSDIR}"
+"${MOUNT_FS}" "${OVLROOT_MAINDIR}/${OVLROOT_LOWER_DIR}/${MOUNT_FSDIR}"
 
 mount -t "overlay" -o \
-"lowerdir=${OVLROOT_DIR}/lower/${MOUNT_FSDIR},\
-upperdir=${OVLROOT_DIR}/upper/${BASEDIR},\
-workdir=${OVLROOT_DIR}/work/${BASEDIR}" "overlay-${BASEDIR}" \
-"${MOUNT_FSDIR}"
+"lowerdir=${OVLROOT_MAINDIR}/${OVLROOT_LOWER_DIR}/${MOUNT_FSDIR},\
+upperdir=${OVLROOT_MAINDIR}/${OVLROOT_UPPER_DIR}/${BASEDIR},\
+workdir=${OVLROOT_MAINDIR}/${OVLROOT_WORK_DIR}/${BASEDIR}" \
+"overlay-${BASEDIR}" "${MOUNT_FSDIR}"
 
 exit 0
