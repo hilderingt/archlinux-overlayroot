@@ -15,11 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-OVLROOT_INITRD_DIR="/.overlay"
-OVLROOT_SYSTEM_DIR="/new_root/.overlay"
-OVLROOT_LOWER_DIR="ro"
-OVLROOT_UPPER_DIR="rw"
-OVLROOT_WORK_DIR="work"
+OVLROOT_MAINDIR="/.overlay"
+OVLROOT_LOWERDIR="${OVLROOT_MAINDIR}/ro"
+OVLROOT_UPPERDIR="${OVLROOT_MAINDIR}/rw"
+OVLROOT_WORKDIR="${OVLROOT_MAINDIR}/work"
+OVLROOT_FSTAB="/tmp/overlayroot.fstab"
+FSTAB_SYSTEM="/etc/fstab"
+ROOTMNT="/new_root"
+
+MSG_MODIFIED="original entry modified by overlayroot"
+MSG_DEACTIVATED="entry deactivated by overlayroot"
 
 add_comments() {
 	while [ ${#} -gt 0 ]
@@ -52,8 +57,7 @@ fsopts_add_ro() {
 
 run_latehook() {
 	local line="" opts="" mnts_overlay="" mnts_rdonly=""
-	local fsopts_root="ro" fstab="/etc/fstab" 
-	local fstab_tmp="/tmp/overlayroot.fstab"
+	local fsopts_root="ro"
 
 	[ ${#overlayroot} -eq 0 ] && return 0
 
@@ -71,20 +75,18 @@ run_latehook() {
 		esac
 	done
 
-	mkdir -p "${OVLROOT_INITRD_DIR}"
-	mount -t "tmpfs" "overlayroot-tmpfs" "${OVLROOT_INITRD_DIR}"
+	mkdir -p "${OVLROOT_MAINDIR}"
+	mount -t "tmpfs" "overlayroot-tmpfs" "${OVLROOT_MAINDIR}"
 	
-	mkdir -p "${OVLROOT_INITRD_DIR}/${OVLROOT_LOWER_DIR}"
-	mkdir -p "${OVLROOT_INITRD_DIR}/${OVLROOT_UPPER_DIR}/root"
-	mkdir -p "${OVLROOT_INITRD_DIR}/${OVLROOT_WORK_DIR}/root"
+	mkdir -p "${OVLROOT_LOWERDIR}"
+	mkdir -p "${OVLROOT_UPPERDIR}/root"
+	mkdir -p "${OVLROOT_WORKDIR}/root"
 
-	mount -o "move" "/new_root" "${OVLROOT_INITRD_DIR}/${OVLROOT_LOWER_DIR}"
+	mount -o "move" "${ROOTMNT}" "${OVLROOT_LOWERDIR}"
 
-	mount -t "overlay" -o \
-	"lowerdir=${OVLROOT_INITRD_DIR}/${OVLROOT_LOWER_DIR},\
-upperdir=${OVLROOT_INITRD_DIR}/${OVLROOT_UPPER_DIR}/root,\
-workdir=${OVLROOT_INITRD_DIR}/${OVLROOT_WORK_DIR}root" \
-	"overlayroot" "/new_root"
+	mount -t "overlay" -o "\
+lowerdir=${OVLROOT_LOWERDIR},upperdir=${OVLROOT_UPPERDIR}/root,\
+workdir=${OVLROOT_WORKDIR}/root" "overlayroot" "${ROOTMNT}"
 
 	while IFS= read -r line
 	do
@@ -102,7 +104,7 @@ workdir=${OVLROOT_INITRD_DIR}/${OVLROOT_WORK_DIR}root" \
 		then
 			if [ ${#fsopts} -eq 0 ] || [ ${#error} -ne 0 ]
 			then
-				add_comments "deactivated by overlayroot" "${line}"
+				add_comments "${MSG_DEACTIVATED}" "${line}"
 				continue
 			fi
 		else
@@ -114,7 +116,7 @@ workdir=${OVLROOT_INITRD_DIR}/${OVLROOT_WORK_DIR}root" \
 		if [ "${fsdir}" = "/" ]
 		then
 			fsopts_root="${fsopts_ro}"
-			add_comments "deactivated by overlayroot" "${line}"
+			add_comments "${MSG_DEACTIVATED}" "${line}"
 			continue
 		fi
 
@@ -122,7 +124,7 @@ workdir=${OVLROOT_INITRD_DIR}/${OVLROOT_WORK_DIR}root" \
 		do
 			if [ "${mnt}" = "${fsdir}" ]
 			then
-				add_comments "modified by overlayroot" "${line}"
+				add_comments "${MSG_MODIFIED}" "${line}"
 				fstype="overlayroot.${fstype}"
 				fsopts="${fsopts_ro}"								
 			fi
@@ -132,18 +134,19 @@ workdir=${OVLROOT_INITRD_DIR}/${OVLROOT_WORK_DIR}root" \
 		do
 			if [ "${mnt}" = "${fsdir}" ]
 			then
-				add_comments "modified by overlayroot" "${line}"
+				add_comments "${MSG_MODIFIED}" "${line}"
 				fsopts="${fsopts_ro}"
 				fspass=0; break
 			fi
 		done
 
-		printf "%s\t%s\t%s\t%s\t%s\t%s\n" \
-		"${fs}" "${fsdir}" "${fstype}" "${fsopts}" "${fsdump}" "${fspass}"
-	done <"/new_root/${fstab}" >"${fstab_tmp}"
+		printf "%s\t%s\t%s\t%s\t%s\t%s\n" "${fs}" "${fsdir}" \
+		"${fstype}" "${fsopts}" "${fsdump}" "${fspass}"
+	done <"${ROOTMNT}/${FSTAB_SYSTEM}" >"${OVLROOT_FSTAB}"
 
-	mkdir -p "${OVLROOT_SYSTEM_DIR}"
-	mount -o "move" "${OVLROOT_INITRD_DIR}" "${OVLROOT_SYSTEM_DIR}"
-	mount -o "remount,${fsopts_root}" "${OVLROOT_SYSTEM_DIR}/${OVLROOT_LOWER_DIR}"
-	mv "${fstab_tmp}" "/new_root/${fstab}"
+	mkdir -p "${ROOTMNT}/${OVLROOT_MAINDIR}"
+	mount -o "move" "${OVLROOT_MAINDIR}" "${ROOTMNT}/${OVLROOT_MAINDIR}"
+	mount -o "remount,${fsopts_root}" "${ROOTMNT}/${OVLROOT_LOWERDIR}"
+
+	mv "${OVLROOT_FSTAB}" "${ROOTMNT}/${FSTAB_SYSTEM}"
 }
