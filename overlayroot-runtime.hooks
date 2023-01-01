@@ -15,11 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-OVLROOT_MAINDIR="/.overlay"
-OVLROOT_LOWERDIR="${OVLROOT_MAINDIR}/ro"
-OVLROOT_UPPERDIR="${OVLROOT_MAINDIR}/rw"
-OVLROOT_WORKDIR="${OVLROOT_MAINDIR}/work"
+OVLROOT_CFGFILE="/etc/overlayroot.conf"
 OVLROOT_FSTAB="/tmp/overlayroot.fstab"
+OVLROOT_MAINDIR="/.overlay"
+OVLROOT_LOWERDIR_NAME="ro"
+OVLROOT_UPPERDIR_NAME="rw"
+OVLROOT_WORKDIR_NAME="work"
 FSTAB_SYSTEM="/etc/fstab"
 ROOTMNT="/new_root"
 
@@ -33,8 +34,8 @@ add_comments() {
 	done
 }
 
-item_in_list() {
-	local item="${1}" list="${2}"
+list_contains() {
+	local list="${1}" item="${2}"
 
 	for _item in ${list}
 	do
@@ -70,7 +71,7 @@ run_latehook() {
 	local line="" options="" noswap="" mnts_overlay="" mnts_rdonly=""
 	local fsopts_root="ro"
 
-	[ ${#overlayroot} -eq 0 ] && return 0
+	[ ${#overlayroot} -eq 0 ] && return
 
 	for opt in ${overlayroot//:/ }
 	do
@@ -94,20 +95,26 @@ run_latehook() {
 				done
 				;;	
 		esac
-	done	
+	done
+
+	. "${OVLROOT_CFGFILE}"
+
+	local ovlroot_lowerdir="${OVLROOT_MAINDIR}/${OVLROOT_LOWERDIR_NAME}"
+	local ovlroot_upperdir="${OVLROOT_MAINDIR}/${OVLROOT_UPPERDIR_NAME}"
+	local ovlroot_workdir="${OVLROOT_MAINDIR}/${OVLROOT_WORKDIR_NAME}"
 
 	mkdir -p "${OVLROOT_MAINDIR}"
 	mount -t "tmpfs" "overlayroot-tmpfs" "${OVLROOT_MAINDIR}"
 	
-	mkdir -p "${OVLROOT_LOWERDIR}"
-	mkdir -p "${OVLROOT_UPPERDIR}/root"
-	mkdir -p "${OVLROOT_WORKDIR}/root"
+	mkdir -p "${ovlroot_lowerdir}"
+	mkdir -p "${ovlroot_upperdir}/root"
+	mkdir -p "${ovlroot_workdir}/root"
 
-	mount -o "move" "${ROOTMNT}" "${OVLROOT_LOWERDIR}"
+	mount -o "move" "${ROOTMNT}" "${ovlroot_lowerdir}"
 
 	mount -t "overlay" -o "\
-lowerdir=${OVLROOT_LOWERDIR},upperdir=${OVLROOT_UPPERDIR}/root,\
-workdir=${OVLROOT_WORKDIR}/root" "overlayroot" "${ROOTMNT}"
+lowerdir=${ovlroot_lowerdir},upperdir=${ovlroot_upperdir}/root,\
+workdir=${ovlroot_workdir}/root" "overlayroot" "${ROOTMNT}"
 
 	while IFS= read -r line
 	do
@@ -144,17 +151,15 @@ workdir=${OVLROOT_WORKDIR}/root" "overlayroot" "${ROOTMNT}"
 
 			fsclass="ram_only"
 		else
-			case "${fstype}" in
-				msdos | fat | vfat | iso9660 | udf | ntfs-3g | ntfs3)
-					fsclass="ro_only"
-					;;
-				tmpfs | tracefs | debugfs | proc | sysfs)
-					fsclass="ram_only"
-					;;
-				*)
-					fsclass="overlay"
-					;;
-			esac
+			if   list_contains "${OVLROOT_FS_ROONLY//,/ }" "${fstype}"
+			then
+				fsclass="ro_only"
+			elif list_contains "${OVLROOT_FS_RAMONLY//,/ }" "${fstype}"
+			then
+				fsclass="ram_only"
+			else
+				fsclass="overlay"
+			fi
 		fi
 
 		if [ "${fsdir}" = "/" ]
@@ -169,18 +174,16 @@ workdir=${OVLROOT_WORKDIR}/root" "overlayroot" "${ROOTMNT}"
 		if [ "${fsclass}" != "ram_only" ]
 		then
 			if [ "${mnts_overlay}" = "all" ] || \
-			   item_in_list "${fsdir}" "${mnts_overlay//,/ }" 
+			   list_contains "${mnts_overlay//,/ }" "${fsdir}"
 			then
-				if [ "${fsclass}" = "ro_only" ]
+				if [ "${fsclass}" != "ro_only" ]
 				then
-					[ "${mnts_overlay}" != "all" ] && return
-				else
 					add_comments "${MSG_MODIFIED}" "${line}"
 					fstype="overlayroot.${fstype}"
 					fsopts="${fsopts_ro}"
 				fi
 			elif [ "${mnts_rdonly}" = "all" ] ||
-				 item_in_list "${fsdir}" "${mnts_rdonly//,/ }"
+				 list_contains "${mnts_rdonly//,/ }" "${fsdir}"
 			then
 				add_comments "${MSG_MODIFIED}" "${line}"
 				fsopts="${fsopts_ro}"
@@ -194,7 +197,7 @@ workdir=${OVLROOT_WORKDIR}/root" "overlayroot" "${ROOTMNT}"
 
 	mkdir -p "${ROOTMNT}/${OVLROOT_MAINDIR}"
 	mount -o "move" "${OVLROOT_MAINDIR}" "${ROOTMNT}/${OVLROOT_MAINDIR}"
-	mount -o "remount,${fsopts_root}" "${ROOTMNT}/${OVLROOT_LOWERDIR}"
+	mount -o "remount,${fsopts_root}" "${ROOTMNT}/${ovlroot_lowerdir}"
 
 	mv "${OVLROOT_FSTAB}" "${ROOTMNT}/${FSTAB_SYSTEM}"
 }
