@@ -13,10 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Maintainer: Tim Hildering <hilderingt@posteo.net>
+
 pkgname=overlayroot
-pkgver=1.0
+pkgver=1.0.1
 pkgrel=1
-pkgdesc="overlayFS root filesystem"
+pkgdesc="Overlay the root filesystem with a tmpfs filesystem."
 arch=('any')
 url="https://github.com/hilderingt/archlinux-overlayroot"
 license=('GPLv3')

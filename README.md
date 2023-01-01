@@ -31,9 +31,15 @@ write access is not needed and you want to protect it against changes.
 ### 2.2 Kernel command line
 - add `overlayroot` to your kernel command line
 - optional:
+	- add `opts=<option>,...`
+\	\	- only available option at this moment to disable swap space is `noswap`
 	- add `tmpfs=/<path>/<to>/<mountpoint>,...` to `overlayroot=...` to overlay
-	  these filesystems with a tmpfs filesystem
-	- add `ro=/<path>/<to>/<mountpoint>,...` to `overlayroot=...` to mount these
+	  filesystems with a tmpfs filesystem
+	- add `ro=/<path>/<to>/<mountpoint>,...` to `overlayroot=...` to mount
 	  filesystems read-only
-	- separate both options with a `:`
-	- complete example: `overlayroot=tmpfs=/usr:ro=/boot,/boot/efi`
+	- specify `all` instead of dedicated mountpoints for `tmpfs` or `ro`
+	- separate options with a `:`
+	- examples: 
+\	\	- `overlayroot=tmpfs=/usr:ro=/boot,/boot/efi`
+\	\	- `overlayroot=tmpfs=all:opts=noswap`
+\	\	- `overlayroot=ro=all`

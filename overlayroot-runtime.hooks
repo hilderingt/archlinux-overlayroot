@@ -33,6 +33,17 @@ add_comments() {
 	done
 }
 
+item_in_list() {
+	local item="${1}" list="${2}"
+
+	for _item in ${list}
+	do
+		[ "${_item}" = "${item}" ] && return 0	
+	done
+
+	return 1
+}
+
 fsopts_add_ro() {
 	local fsopts=${1}, fsopts_ro="ro"
 	local opt=""
@@ -56,7 +67,7 @@ fsopts_add_ro() {
 }
 
 run_latehook() {
-	local line="" opts="" mnts_overlay="" mnts_rdonly=""
+	local line="" options="" noswap="" mnts_overlay="" mnts_rdonly=""
 	local fsopts_root="ro"
 
 	[ ${#overlayroot} -eq 0 ] && return 0
@@ -69,11 +80,21 @@ run_latehook() {
 				;;
 			ro=*)
 				mnts_rdonly="${opt#ro=}"
-				;;			
-			*)
 				;;
+			opts=*)
+				options="${opt#options=}"
+
+				for opt in ${options//,/ }
+				do
+					case "${opt}" in
+						noswap)
+							noswap="y"
+							;;
+					esac
+				done
+				;;	
 		esac
-	done
+	done	
 
 	mkdir -p "${OVLROOT_MAINDIR}"
 	mount -t "tmpfs" "overlayroot-tmpfs" "${OVLROOT_MAINDIR}"
@@ -91,7 +112,7 @@ workdir=${OVLROOT_WORKDIR}/root" "overlayroot" "${ROOTMNT}"
 	while IFS= read -r line
 	do
 		local fs="" fsdir="" fstype="" fsopts="" fsdump="" fspass=""
-		local error="" mnt="" fsopts_ro=""
+		local error="" fsclass="" fsopts_ro=""
 		local _line="${line%%#*}"
 
 		[ ${#_line} -eq 0 ] && { echo "${line}"; continue; }
@@ -113,32 +134,59 @@ workdir=${OVLROOT_WORKDIR}/root" "overlayroot" "${ROOTMNT}"
 
 		fsopts_ro="$(fsopts_add_ro "${fsopts}")"
 
+		if [ "${fstype}" = "swap" ]
+		then
+			if [ "${noswap}" = "y" ]
+			then
+				add_comments "${MSG_DEACTIVATED}" "${line}"
+				continue
+			fi
+
+			fsclass="ram_only"
+		else
+			case "${fstype}" in
+				msdos | fat | vfat | iso9660 | udf | ntfs-3g | ntfs3)
+					fsclass="ro_only"
+					;;
+				tmpfs | tracefs | debugfs | proc | sysfs)
+					fsclass="ram_only"
+					;;
+				*)
+					fsclass="overlay"
+					;;
+			esac
+		fi
+
 		if [ "${fsdir}" = "/" ]
 		then
+			[ "${fsclass}" != "overlay" ] && return
+
 			fsopts_root="${fsopts_ro}"
 			add_comments "${MSG_DEACTIVATED}" "${line}"
 			continue
 		fi
 
-		for mnt in ${mnts_overlay//,/ }
-		do
-			if [ "${mnt}" = "${fsdir}" ]
+		if [ "${fsclass}" != "ram_only" ]
+		then
+			if [ "${mnts_overlay}" = "all" ] || \
+			   item_in_list "${fsdir}" "${mnts_overlay//,/ }" 
 			then
-				add_comments "${MSG_MODIFIED}" "${line}"
-				fstype="overlayroot.${fstype}"
-				fsopts="${fsopts_ro}"								
-			fi
-		done
-
-		for mnt in ${mnts_rdonly//,/ }
-		do
-			if [ "${mnt}" = "${fsdir}" ]
+				if [ "${fsclass}" = "ro_only" ]
+				then
+					[ "${mnts_overlay}" != "all" ] && return
+				else
+					add_comments "${MSG_MODIFIED}" "${line}"
+					fstype="overlayroot.${fstype}"
+					fsopts="${fsopts_ro}"
+				fi
+			elif [ "${mnts_rdonly}" = "all" ] ||
+				 item_in_list "${fsdir}" "${mnts_rdonly//,/ }"
 			then
 				add_comments "${MSG_MODIFIED}" "${line}"
 				fsopts="${fsopts_ro}"
-				fspass=0; break
+				fspass=0
 			fi
-		done
+		fi
 
 		printf "%s\t%s\t%s\t%s\t%s\t%s\n" "${fs}" "${fsdir}" \
 		"${fstype}" "${fsopts}" "${fsdump}" "${fspass}"
