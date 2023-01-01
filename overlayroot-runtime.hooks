@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+MSG_MODIFIED="original line modified by overlayroot"
+MSG_DEACTIVATED="line deactivated by overlayroot"
 OVLROOT_CFGFILE="/etc/overlayroot.conf"
 OVLROOT_FSTAB="/tmp/overlayroot.fstab"
 OVLROOT_MAINDIR="/.overlay"
@@ -23,9 +25,6 @@ OVLROOT_UPPERDIR_NAME="rw"
 OVLROOT_WORKDIR_NAME="work"
 FSTAB_SYSTEM="/etc/fstab"
 ROOTMNT="/new_root"
-
-MSG_MODIFIED="original entry modified by overlayroot"
-MSG_DEACTIVATED="entry deactivated by overlayroot"
 
 add_comments() {
 	while [ ${#} -gt 0 ]
@@ -69,6 +68,7 @@ fsopts_add_ro() {
 
 run_latehook() {
 	local line="" options="" noswap="" mnts_overlay="" mnts_rdonly=""
+	local ovlroot_lowerdir="" ovlroot_upperdir="" ovlroot_workdir=""
 	local fsopts_root="ro"
 
 	[ ${#overlayroot} -eq 0 ] && return
@@ -99,9 +99,9 @@ run_latehook() {
 
 	. "${OVLROOT_CFGFILE}"
 
-	local ovlroot_lowerdir="${OVLROOT_MAINDIR}/${OVLROOT_LOWERDIR_NAME}"
-	local ovlroot_upperdir="${OVLROOT_MAINDIR}/${OVLROOT_UPPERDIR_NAME}"
-	local ovlroot_workdir="${OVLROOT_MAINDIR}/${OVLROOT_WORKDIR_NAME}"
+	ovlroot_lowerdir="${OVLROOT_MAINDIR}/${OVLROOT_LOWERDIR_NAME}"
+	ovlroot_upperdir="${OVLROOT_MAINDIR}/${OVLROOT_UPPERDIR_NAME}"
+	ovlroot_workdir="${OVLROOT_MAINDIR}/${OVLROOT_WORKDIR_NAME}"
 
 	mkdir -p "${OVLROOT_MAINDIR}"
 	mount -t "tmpfs" "overlayroot-tmpfs" "${OVLROOT_MAINDIR}"
@@ -111,10 +111,12 @@ run_latehook() {
 	mkdir -p "${ovlroot_workdir}/root"
 
 	mount -o "move" "${ROOTMNT}" "${ovlroot_lowerdir}"
+	mount -t "overlay" -o "lowerdir=${ovlroot_lowerdir},\
+upperdir=${ovlroot_upperdir}/root,workdir=${ovlroot_workdir}/root" \
+"overlayroot" "${ROOTMNT}"
 
-	mount -t "overlay" -o "\
-lowerdir=${ovlroot_lowerdir},upperdir=${ovlroot_upperdir}/root,\
-workdir=${ovlroot_workdir}/root" "overlayroot" "${ROOTMNT}"
+	mkdir -p "${ROOTMNT}/${OVLROOT_MAINDIR}"
+	mount -o "move" "${OVLROOT_MAINDIR}" "${ROOTMNT}/${OVLROOT_MAINDIR}"
 
 	while IFS= read -r line
 	do
@@ -195,9 +197,6 @@ workdir=${ovlroot_workdir}/root" "overlayroot" "${ROOTMNT}"
 		"${fstype}" "${fsopts}" "${fsdump}" "${fspass}"
 	done <"${ROOTMNT}/${FSTAB_SYSTEM}" >"${OVLROOT_FSTAB}"
 
-	mkdir -p "${ROOTMNT}/${OVLROOT_MAINDIR}"
-	mount -o "move" "${OVLROOT_MAINDIR}" "${ROOTMNT}/${OVLROOT_MAINDIR}"
 	mount -o "remount,${fsopts_root}" "${ROOTMNT}/${ovlroot_lowerdir}"
-
 	mv "${OVLROOT_FSTAB}" "${ROOTMNT}/${FSTAB_SYSTEM}"
 }
