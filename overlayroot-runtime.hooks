@@ -17,6 +17,9 @@
 
 MSG_MODIFIED="original line modified by overlayroot"
 MSG_DEACTIVATED="line deactivated by overlayroot"
+OVLROOT_FS_ROONLY="msdos,fat,vfat,iso9660,udf,ntfs-3g,ntfs3"
+OVLROOT_FS_RAMONLY="tmpfs,devpts,devtmpfs,tracefs,debugfs,\
+configfs,securityfs,proc,sysfs,swap,ramfs"
 OVLROOT_CFGFILE="/etc/overlayroot.conf"
 OVLROOT_FSTAB="/tmp/overlayroot.fstab"
 OVLROOT_MAINDIR="/.overlay"
@@ -97,7 +100,7 @@ run_latehook() {
 		esac
 	done
 
-	. "${OVLROOT_CFGFILE}"
+	[ -f "${OVLROOT_CFGFILE}" ] && . "${OVLROOT_CFGFILE}"
 
 	ovlroot_lowerdir="${OVLROOT_MAINDIR}/${OVLROOT_LOWERDIR_NAME}"
 	ovlroot_upperdir="${OVLROOT_MAINDIR}/${OVLROOT_UPPERDIR_NAME}"
