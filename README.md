@@ -47,9 +47,9 @@ write access is not needed and you want to protect it against changes.
 
 ### 2.3 Configuration File
 - path `/etc/overlayroot.conf`
-	- `OVLROOT_FS_ROONLY=fs,...` filesystems that can't be used as lower layer
+	- `OVLROOT_FS_ROONLY=<fs>,...` filesystems that can't be used as lower layer
 		 - examples: `msdos, (v)fat, ntfs-3g`
-	- `OVLROOT_FS_RAMONLY=fs,...` filesystems that are always ignored by overlayroot
+	- `OVLROOT_FS_RAMONLY=<fs>,...` filesystems that are always ignored by overlayroot
 		 - examples: `tmpfs, proc, sysfs`
 	- `OVLROOT_FSTAB=/<path>/<to>/<fstab>` modified fstab created by overlayroot 
 	  during initramfs phase to replace system-wide fstab
