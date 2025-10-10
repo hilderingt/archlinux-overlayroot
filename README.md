@@ -1,3 +1,6 @@
+# No longer maintained
+This project is no longer maintained. It is replaced by [ovlroot](https://github.com/hilderingt/archlinux-overlayroot)
+
 # archlinux-overlayroot
 With _overlayroot_ you can overlay your root filesystem with a temporary tmpfs
 filesystem to mount it read-only afterwards. Any changes are written to the
