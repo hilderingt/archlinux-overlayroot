@@ -1,5 +1,5 @@
 # No longer maintained
-This project is no longer maintained. It is replaced by [ovlroot](https://github.com/hilderingt/archlinux-overlayroot)
+This project is no longer maintained. It is replaced by [ovlroot](https://github.com/hilderingt/archlinux-ovlroot).
 
 # archlinux-overlayroot
 With _overlayroot_ you can overlay your root filesystem with a temporary tmpfs
