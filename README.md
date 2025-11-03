@@ -67,8 +67,8 @@ write access is not needed and you want to protect it against changes.
 	- `OVLROOT_ROOT_FSTAB_OPTS=<value>` the root filesystem is remounted with
 	  the options listed in the system's fstab, ether `y` for yes or `n` for no
 	  (default value: `n`)
-	- `OVLROOT_ABORT_RO_ON_ERROR=<value>` stop (`y`) or continues (`n`) rollback
-	  of changes made by the script
+	- `OVLROOT_ABORT_RO_ON_ERROR=<value>` stops (`y`) or continues (`n`) rollback
+	  of changes made by the script in case of error
 	- `OVLROOT_LIST_SEP=<separator>` character to separate list elements in
 	  `OVLROOT_OVERLAY`,`OVLROOT_RDONLY` and `OVLROOT_DISABLE` (default value: `,`)
 	- `OVLROOT_OVERLAY=<mountpoint>,...` list of mountpoints for which further
