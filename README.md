@@ -1,4 +1,4 @@
-# archlinux-ovlroot
+# archlinux-overlayroot
 With _overlayroot_ you can overlay your root filesystem with a temporary tmpfs
 filesystem to mount it read-only afterwards. Any changes are written to the
 tmpfs filesystem (which resides in memory), so that these changes are discarded
