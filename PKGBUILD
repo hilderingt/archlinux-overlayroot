@@ -15,12 +15,12 @@
 
 # Maintainer: Tim Hildering <hilderingt@posteo.net>
 
-pkgname=archlinux-ovlroot
+pkgname=archlinux-overlayroot
 pkgver=0.9.0
 pkgrel=1
 pkgdesc="Overlay the root filesystem with a tmpfs filesystem."
 arch=('any')
-url="https://github.com/hilderingt/archlinux-ovlroot"
+url="https://github.com/hilderingt/archlinux-overlayroot"
 license=('GPLv3')
 depends=(
   'mkinitcpio'

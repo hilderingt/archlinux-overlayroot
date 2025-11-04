@@ -1,5 +1,5 @@
 # archlinux-ovlroot
-With _ovlroot_ you can overlay your root filesystem with a temporary tmpfs
+With _overlayroot_ you can overlay your root filesystem with a temporary tmpfs
 filesystem to mount it read-only afterwards. Any changes are written to the
 tmpfs filesystem (which resides in memory), so that these changes are discarded
 on reboot or a loss of power does not threaten the integrity of the system's 
@@ -16,7 +16,7 @@ write access is not needed and you want to protect it against changes.
 
 #### 1.2 Install Package
 - build or download package
-- run `pacman -U /<path>/<to>/ovlroot-<version>-any.pkg.tar.zst`
+- run `pacman -U /<path>/<to>/overlayroot-<version>-any.pkg.tar.zst`
 
 ## 2. Configuration
 
