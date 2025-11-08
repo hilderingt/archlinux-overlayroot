@@ -154,7 +154,7 @@ _dir=""
 [ "x$OVLROOT_BASE_DEV" = "x" ]     && exit 1
 [ "x$OVLROOT_LIST_SEP" = "x" ]     && OVLROOT_LIST_SEP=","
 
-if [ "x$OVLROOT_LOWER_MODE" != "xrw" -a "x$OVLROOT_LOWER_MODE" != "xro" ]; then
+if [ "x$OVLROOT_LOWER_MODE" != "xrw" ] && [ "x$OVLROOT_LOWER_MODE" != "xro" ]; then
 	OVLROOT_LOWER_MODE="ro"
 fi
 
