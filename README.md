@@ -14,7 +14,7 @@ write access is not needed and you want to protect it against changes.
   of the repository
 - run `makepkg`
 
-#### 1.2 Install Package
+### 1.2 Install Package
 - build or download package
 - run `pacman -U /<path>/<to>/overlayroot-<version>-any.pkg.tar.zst`
 
@@ -78,4 +78,13 @@ write access is not needed and you want to protect it against changes.
     - `OVLROOT_DISABLE=<mountpoint>,...` list of mountpoints that are disabled
 	- `OVLROOT_SWAP=<value>` disables (`off`) or enables (`on`) swap
 	  (default value: `on`)
+	- `OVLROOT_ASK_DISABLE=<value>` with this option it is asked at boot time
+	  if you want to disable overlayroot. valid values are `local`, `fifo` or
+	  `local+fifo`. the option `local` simply asks and reads from stdin. 
+	  `fifo` makes the script read from a fifo. this is for scenarios where you
+	  have ssh access during initramfs stage. then you can simply write to the
+	  fifo and disable overlayroot. (deactivated by default)
+	- `OVLROOT_ASK_DISABLE_TO=<timeout>` timeout in seconds for waiting for 
+	  input by the user when asking for disabling overlayroot. `-1` lets
+	  overlayroot wait indefinitely. (default value: `10`)
 
