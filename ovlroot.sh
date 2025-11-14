@@ -131,9 +131,6 @@ ovl_work_dir=""
 root_init_mode=""
 root_init_opts=""
 root_new_opts=""
-disable_local=""
-disable_fifo=""
-filename=""
 modified="n"
 journal=""
 ovlopts=""
@@ -151,25 +148,17 @@ _line=""
 _dir=""
 
 if   [ "x$OVLROOT_ASK_DISABLE" = "xlocal" ]; then
-	disable_local="y"
+	listen="-"
+	printf "%s" "Disable overlayroot? [y/N] "
 elif [ "x$OVLROOT_ASK_DISABLE" = "xfifo" ]; then
-	disable_fifo="y"
-elif [ "x$OVLROOT_ASK_DISABLE" = "xlocal+fifo" ]; then
-	disable_local="y"
-	disable_fifo="y"
-fi
-
-if [ "x$disable_fifo" = "xy" ]; then
 	if mkfifo "/tmp/disable.fifo"; then
 		listen="/tmp/disable.fifo"
 	fi
-fi
+elif [ "x$OVLROOT_ASK_DISABLE" = "xlocal+fifo" ]; then
+	listen="-"
 
-if [ "x$disable_local" = "xy" ]; then
-	if [ "x$listen" = "x" ]; then
-		listen="-"
-	else
-		listen="$listen -"
+	if mkfifo "/tmp/disable.fifo"; then
+		listen="$listen /tmp/disable.fifo"
 	fi
 
 	printf "%s" "Disable overlayroot? [y/N] "

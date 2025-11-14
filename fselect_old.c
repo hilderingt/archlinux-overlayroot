@@ -16,56 +16,19 @@
 #define FD_INIT                4
 #define FD_LIMIT              32
 
-#define READ_BUFFER_SIZE       8
-#define READ_BUFFER_MAX     2048
-
-#define READ_MAX_RETRIES       4
-
-int read_line(int fd, char **buf, size_t bufsz) {
-	size_t nused = 0, retries = 0;
-	char *bp = *buf, *pos;
-	ssize_t nread;
-
-	while (retries < READ_MAX_RETRIES) {
-		nread = read(fd, bp, bufsz);
-		if (nread == -1 && errno != EAGAIN)
-			return (1);
-
-		pos = strchr(bp, '\n');
-		if (pos != NULL) {
-			pos = '\0';
-			break;
-		}
-
-		if (nread == bufsz) {
-			if (bufsz == READ_BUFFER_MAX)
-				return (1);
-
-			bufsz *= 2;
-
-			void *ptr = realloc(*buf, bufsz * sizeof(char));
-			if (ptr == NULL)
-				return (1);
-
-			*buf = ptr;
-		}
-
-		nused += nread;
-		bp = &((*buf)[nused]);
-		++retries;
-	}
-
-	return (0);
-}
+struct fd {
+	int   fd;
+	char *fname;
+};
 
 int main(int argc, char *argv[]) {
-	int fd, ret, *fds, retv = 1, maxfd = 0;
-	size_t rbufsz = READ_BUFFER_SIZE;
+	int fd, ret, retv = 1, maxfd = 0;
 	size_t fdcnt = 0, fdsz = FD_INIT;
-	char *cp, *pos, *rbuf, *endptr;
+	char *cp, *endptr;
 	long to;
 	struct timeval tv_struct;
 	struct timeval *tv = &tv_struct;
+	struct fd *fds;
 	fd_set fdset;
 
 	if (argc < ARGUMENT_MIN_COUNT)
@@ -73,19 +36,15 @@ int main(int argc, char *argv[]) {
 
 	FD_ZERO(&fdset);
 
-	fds = malloc(fdsz * sizeof(int));
+	fds = malloc(fdsz * sizeof(struct fd));
 	if (fds == NULL)
 		return (1);
-
-	rbuf = malloc(rbufsz * sizeof(char));
-	if (rbuf == NULL)
-		goto out;
 
 	errno = 0;
 	cp = argv[ARGUMENT_TIMEOUT_INDEX];
 	to = strtol(cp, &endptr, 10);
 	if (cp == endptr || errno != 0)
-		goto out2;
+		goto out;
 
 	if (to == -1) {
 		tv = NULL;
@@ -102,7 +61,7 @@ int main(int argc, char *argv[]) {
 		} else {
 			fd = open(cp, O_RDONLY | O_NONBLOCK);
 			if (fd == -1)
-				goto out3;
+				goto out2;
 		}
 
 		if (fd > maxfd)
@@ -110,32 +69,30 @@ int main(int argc, char *argv[]) {
 
 		if (fdcnt == fdsz) {
 			if (fdsz == FD_LIMIT)
-				goto out3;
+				goto out2;
 
 			fdsz *= 2;
 
-			void *ptr = realloc(fds, fdsz * sizeof(int));
+			void *ptr = realloc(fds, fdsz * sizeof(struct fd));
 			if (ptr == NULL)
-				goto out3;
+				goto out2;
 
 			fds = ptr;
 		}
 
-		fds[fdcnt] = fd;
+		fds[fdcnt].fd = fd;
+		fds[fdcnt].fname = cp;
 		FD_SET(fd, &fdset);
 		++fdcnt;
 	}
 
 	ret = select(maxfd + 1, &fdset, NULL, NULL, tv);
 	if (ret == -1) {
-		goto out3;
+		goto out2;
 	} else if (ret > 0) {
 		for (size_t i = 0; i < fdcnt; ++i) {
-			if (FD_ISSET(fds[i], &fdset)) {
-				if (read_line(fds[i], &rbuf, rbufsz) > 9)
-					goto out3;
-
-				printf("%s\n", rbuf);
+			if (FD_ISSET(fds[i].fd, &fdset)) {
+				printf("%s\n", fds[i].fname);
 				break;
 			}
 		}
@@ -143,14 +100,11 @@ int main(int argc, char *argv[]) {
 
 	retv = 0;
 
-out3:
-	for (size_t i = 0; i < fdcnt; ++i) {
-		if (fds[i] > 0)
-			close(fds[i]);
-	}
-
 out2:
-	free(rbuf);
+	for (size_t i = 0; i < fdcnt; ++i) {
+		if (fds[i].fd > 0)
+			close(fds[i].fd);
+	}
 
 out:
 	free(fds);
