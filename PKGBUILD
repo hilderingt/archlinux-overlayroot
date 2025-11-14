@@ -51,6 +51,6 @@ package() {
   install -D -m 755 "$srcdir/mount.ovlroot" "$pkgdir/usr/bin/mount.ovlroot"
   mkdir -p "$pkgdir/usr/share/ovlroot"
   install -D -m 644 "$srcdir/ovlroot.sh" "$pkgdir/usr/share/ovlroot/ovlroot.sh"
-  install -D -m 644 "$srcdir/fselect" "$pkgdir/usr/share/ovlroot/ovlroot-helper"
+  install -D -m 644 "$srcdir/ovlroot-helper" "$pkgdir/usr/share/ovlroot/ovlroot-helper"
   install -d -m 700 -o root -g root "$pkgdir/etc/ovlroot.d"
 }
