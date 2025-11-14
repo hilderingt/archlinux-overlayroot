@@ -165,7 +165,7 @@ elif [ "x$OVLROOT_ASK_DISABLE" = "xlocal+fifo" ]; then
 fi
 
 if [ "x$listen" != "x" ]; then
-	answer="$(fselect "$OVLROOT_ASK_DISABLE_TO" $listen)"
+	answer="$(ovlroot-helper "$OVLROOT_ASK_DISABLE_TO" $listen)"
 
 	if [ "x$answer" = "xy" ] || [ "x$answer" = "xY" ]; then
 		exit 0
