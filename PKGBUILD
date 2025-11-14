@@ -24,6 +24,8 @@ url="https://github.com/hilderingt/archlinux-overlayroot"
 license=('GPLv3')
 depends=(
   'mkinitcpio'
+)
+makedepends=(
   'gcc'
 )
 source=(
