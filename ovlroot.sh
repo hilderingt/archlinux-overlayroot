@@ -153,6 +153,7 @@ if   [ "x$OVLROOT_ASK_DISABLE" = "xlocal" ]; then
 elif [ "x$OVLROOT_ASK_DISABLE" = "xfifo" ]; then
 	if mkfifo "/tmp/disable.fifo"; then
 		listen="/tmp/disable.fifo"
+		push_undo_cmd rm "/tmp/disable.fifo"
 	fi
 elif [ "x$OVLROOT_ASK_DISABLE" = "xlocal+fifo" ]; then
 	listen="-"

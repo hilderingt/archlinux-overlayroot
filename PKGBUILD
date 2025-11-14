@@ -16,7 +16,7 @@
 # Maintainer: Tim Hildering <hilderingt@posteo.net>
 
 pkgname=archlinux-overlayroot
-pkgver=0.9.0
+pkgver=0.9.1
 pkgrel=1
 pkgdesc="Overlay the root filesystem with a tmpfs filesystem."
 arch=('any')
@@ -39,7 +39,7 @@ sha256sums=(
   '5e93f7569efd7a8e84358d3d7990af3dde1d72e3f572a832a71305021f7ee8cf'
   'bcf1c2d640e54988fd58ee37fa9077e3bd74684a0823cb55f89ef8afe1f33500'
   'c6e15e20c35897e653d80a5ce6b3b78700d8ff35052803401bb9b2c214c45bfc'
-  'dd0b4145b8017adad52c0950addb730eb1976d0638ebf2c6d0db208fbd408a0a'
+  'd5b72a5a3f2530076e1de7171ac0a88e0980428ef7559fb1f48605da7344be0f'
   '18b8f45620b17e6ce2e6d2bccdce69ae2ba51edfe9a27b13260c61b2ecb1cf05'
 )
 
