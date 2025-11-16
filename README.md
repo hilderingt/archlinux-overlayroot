@@ -86,5 +86,5 @@ write access is not needed and you want to protect it against changes.
 	  fifo and disable overlayroot (deactivated by default).
 	- `OVLROOT_ASK_DISABLE_TO=<timeout>` Timeout in seconds for waiting for 
 	  input by the user when asking for disabling overlayroot. `-1` lets
-	  overlayroot wait indefinitely (default value: `10`).
+	  overlayroot wait indefinitely (default value: `15`).
 
