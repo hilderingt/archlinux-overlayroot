@@ -143,9 +143,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	ret = select(maxfd + 1, &fdset, NULL, NULL, tv);
-	if (ret == -1) {
-		goto out3;
-	} else if (ret > 0) {
+
+	if (ret > 0) {
 		for (size_t i = 0; i < fdcnt; ++i) {
 			if (FD_ISSET(fds[i], &fdset)) {
 				if (read_line(fds[i], &rbuf, rbufsz) > 0)
@@ -155,6 +154,8 @@ int main(int argc, char *argv[]) {
 				break;
 			}
 		}
+	} else if (ret == -1) {
+		goto out3;
 	}
 
 	retv = 0;

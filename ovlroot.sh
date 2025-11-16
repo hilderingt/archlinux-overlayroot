@@ -110,7 +110,7 @@ OVLROOT_OVL_OPTS_ROOT=""
 OVLROOT_ROOT_FSTAB_OPTS="n"
 OVLROOT_ABORT_RO_ON_ERROR="n"
 OVLROOT_ASK_DISABLE=""
-OVLROOT_ASK_DISABLE_TO="10"
+OVLROOT_ASK_DISABLE_TO="15"
 OVLROOT_LIST_SEP=","
 OVLROOT_OVERLAY=""
 OVLROOT_DISABLE=""
@@ -160,13 +160,14 @@ elif [ "x$OVLROOT_ASK_DISABLE" = "xlocal+fifo" ]; then
 
 	if mkfifo "/tmp/disable.fifo"; then
 		listen="$listen /tmp/disable.fifo"
+		push_undo_cmd rm "/tmp/disable.fifo"
 	fi
 
 	printf "%s" "Disable overlayroot? [y/N] "
 fi
 
 if [ "x$listen" != "x" ]; then
-	answer="$(ovlroot-helper "$OVLROOT_ASK_DISABLE_TO" $listen)"
+	answer="$(ovlroot-helper "${OVLROOT_ASK_DISABLE_TO:-"15"}" $listen)"
 
 	if [ "x$answer" = "xy" ] || [ "x$answer" = "xY" ]; then
 		exit 0
@@ -313,7 +314,7 @@ while IFS= read -r line; do
 
 	set +f
 
-	if [ "x$err"  != "x" ] || [ "x$opts" = "x" ]; then
+	if [ "x$err" != "x" ] || [ "x$opts" = "x" ]; then
 		echo "$line"; continue
 	fi
 
