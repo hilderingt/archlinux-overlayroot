@@ -42,17 +42,7 @@ int read_line(int fd, char **buf, size_t bufsz) {
 	ssize_t nread;
 
 	while (retries < READ_MAX_RETRIES) {
-		nread = read(fd, bp, bufsz);
-		if (nread == -1 && errno != EAGAIN)
-			return (1);
-
-		pos = strchr(bp, '\n');
-		if (pos != NULL) {
-			pos = '\0';
-			break;
-		}
-
-		if (nread == bufsz) {
+		if (nused == bufsz) {
 			if (bufsz == READ_BUFFER_MAX)
 				return (1);
 
@@ -65,8 +55,19 @@ int read_line(int fd, char **buf, size_t bufsz) {
 			*buf = ptr;
 		}
 
-		nused += nread;
 		bp = &((*buf)[nused]);
+
+		nread = read(fd, bp, bufsz - nused);
+		if (nread == -1 && errno != EAGAIN)
+			return (1);
+
+		pos = strchr(bp, '\n');
+		if (pos != NULL) {
+			*pos = '\0';
+			break;
+		}
+
+		nused += nread;
 		++retries;
 	}
 
