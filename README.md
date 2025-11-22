@@ -16,7 +16,7 @@ write access is not needed and you want to protect it against changes.
 
 ### 1.2 Install Package
 - build or download package
-- run `pacman -U /<path>/<to>/overlayroot-<version>-any.pkg.tar.zst`
+- run `pacman -U /<path>/<to>/archlinux-overlayroot-<version>-any.pkg.tar.zst`
 
 ## 2. Configuration
 
@@ -46,7 +46,7 @@ write access is not needed and you want to protect it against changes.
 	- `OVLROOT_BASE_DIR=/<path>/<to>/<mountpoint>` Absolute path of the mountpoint
 	  for underlying filesystem (default value: `/.ovlroot`).
 	- `OVLROOT_BASE_CLEAN=<value>` When the base filesystem is for example a
-	  block device, any remaining data is erased when value is `ỳ` or not when
+	  block device, any remaining data is erased when value is `y` or not when
 	  value is `n` (default value: `n`).
 	- `OVLROOT_LOWER_DIR=<dirname>` Relative path of the subdirectory of all
 	  lower filesystem mounts (default value: `lowerdir`).
@@ -54,10 +54,10 @@ write access is not needed and you want to protect it against changes.
 	  changes made to the filesystems (default value: `upperdir`).
 	- `OVLROOT_WORK_DIR=<dirname>` Relative path of the subdirectory needed by
 	  OverlayFS.
-	- `OVLROOT_FSTAB=/<path>/<to>/<fstab>` Absolute path to system fstab
+	- `OVLROOT_FSTAB=/<path>/<to>/<fstab>` Absolute path to system's fstab
 	  (default value: `/etc/fstab`).
 	- `OVLROOT_NEW_FSTAB=/<path>/<to>/<fstab>` Absolute path where new fstab is
-	  created (default value: `/tmp/new_fstab`).
+	  created (default value: file returned by `mktemp`).
 	- `OVLROOT_LOWER_MODE=<mode>` Lower mounts are either `rw` (read-write) or
 	  `ro` (read-only) (default value: `ro`).
 	- `OVLROOT_OVL_OPTS_ROOT=<opt>,...` Options added to the mount options of
