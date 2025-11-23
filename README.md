@@ -35,8 +35,10 @@ write access is not needed and you want to protect it against changes.
 - directory for configuration files is `/etc/ovlroot.d`
 - to apply changes to configuration files run `mkinitcpio -P`
 - configuration files can contain the following options:
-	- `OVLROOT_INIT_ROOTMNT=/<path>/<to>/<rootfs>` Absolute path of the mountpoint
-	  of the root filesystem during initramfs stage (default value: `/new_root`).
+	- `OVLROOT_INIT_ROOTMNT=/<path>/<to>/<rootfs>`
+		- absolute path of the first mountpoint of the root filesystem during 
+		  initramfs stage
+		- default value: `/new_root`
 	- `OVLROOT_BASE_TYPE=<fstype>` Type of underlying filesystem
 	  (default value: `tmpfs`).
     - `OVLROOT_BASE_OPTS=<opt>,...` Options to add to the mount of the underlying
