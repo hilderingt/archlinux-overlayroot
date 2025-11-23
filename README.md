@@ -103,7 +103,7 @@ write access is not needed and you want to protect it against changes.
 		- valid values are `local`, `fifo` or `local+fifo`
 		- option `local` simply reads from stdin
 		- `fifo` makes the script read from a fifo, for scenarios where you
-		  have ssh access during initramfs stage. 
+		  have ssh access during initramfs stage
 		- you can simply write to the `fifo` and disable overlayroot 
 		- deactivated by default
 	- `OVLROOT_ASK_DISABLE_TO=<timeout>`
