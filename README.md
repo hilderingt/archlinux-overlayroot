@@ -41,7 +41,7 @@ write access is not needed and you want to protect it against changes.
 		- default value: `/new_root`
 	- `OVLROOT_BASE_TYPE=<fstype>`
 		- type of underlying base filesystem
-		- default value: `tmpfs`.
+		- default value: `tmpfs`
     - `OVLROOT_BASE_OPTS=<opt>,...`
 		- options to add to the mount of the underlying base filesystem
 		- either `tmpfs` or an other filesystem, e. g. block-based like `ext4`
