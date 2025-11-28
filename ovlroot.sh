@@ -153,14 +153,14 @@ if   [ "x$OVLROOT_ASK_DISABLE" = "xlocal" ]; then
 elif [ "x$OVLROOT_ASK_DISABLE" = "xfifo" ]; then
 	if mkfifo "/tmp/disable.fifo"; then
 		listen="/tmp/disable.fifo"
-		push_undo_cmd rm "/tmp/disable.fifo"
+		push_undo_cmd rm -f "/tmp/disable.fifo"
 	fi
 elif [ "x$OVLROOT_ASK_DISABLE" = "xlocal+fifo" ]; then
 	listen="-"
 
 	if mkfifo "/tmp/disable.fifo"; then
 		listen="$listen /tmp/disable.fifo"
-		push_undo_cmd rm "/tmp/disable.fifo"
+		push_undo_cmd rm -f "/tmp/disable.fifo"
 	fi
 
 	printf "%s" "Disable overlayroot? [y/N] "
