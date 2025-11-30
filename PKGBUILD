@@ -36,7 +36,7 @@ source=(
   'ovlroot-helper.c'
 )
 sha256sums=(
-  '8be2e6680c096abb6e5d1444fb27959d7ecac59df4b5828faa121101295cff18'
+  '8ca7360df9a9e781bb8c99505030d5b4c97e9b4bf87ec6d3992ec98c2a0b0e2b'
   'dca9056eb5e460ee6465de921a4b77524ebc7e6a83b964c629be525934910ef0'
   'c6e15e20c35897e653d80a5ce6b3b78700d8ff35052803401bb9b2c214c45bfc'
   'fffb49dff7063d788faf935d0176a8e6a156d9b2adf1dfc0912a3d0608f3f59e'
@@ -50,9 +50,9 @@ build() {
 package() {
   install -D -m 644 "$srcdir/install.sh" "$pkgdir/usr/lib/initcpio/install/ovlroot"
   install -D -m 644 "$srcdir/hook.sh" "$pkgdir/usr/lib/initcpio/hooks/ovlroot"
-  install -D -m 755 "$srcdir/mount.ovlroot" "$pkgdir/usr/bin/mount.ovlroot"
+  install -D -m 555 "$srcdir/mount.ovlroot" "$pkgdir/usr/bin/mount.ovlroot"
   mkdir -p "$pkgdir/usr/share/ovlroot"
-  install -D -m 644 "$srcdir/ovlroot.sh" "$pkgdir/usr/share/ovlroot/ovlroot.sh"
-  install -D -m 444 "$srcdir/ovlroot-helper" "$pkgdir/usr/share/ovlroot/ovlroot-helper"
+  install -D -m 444 "$srcdir/ovlroot.sh" "$pkgdir/usr/share/ovlroot/ovlroot.sh"
+  install -D -m 555 "$srcdir/ovlroot-helper" "$pkgdir/usr/share/ovlroot/ovlroot-helper"
   install -d -m 700 -o root -g root "$pkgdir/etc/ovlroot.d"
 }
