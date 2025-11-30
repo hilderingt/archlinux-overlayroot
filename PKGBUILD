@@ -17,7 +17,7 @@
 
 pkgname=archlinux-overlayroot
 pkgver=0.9.1
-pkgrel=1
+pkgrel=2
 pkgdesc="Overlay the root filesystem with a tmpfs filesystem."
 arch=('any')
 url="https://github.com/hilderingt/archlinux-overlayroot"
@@ -37,7 +37,7 @@ source=(
 )
 sha256sums=(
   '8be2e6680c096abb6e5d1444fb27959d7ecac59df4b5828faa121101295cff18'
-  'bcf1c2d640e54988fd58ee37fa9077e3bd74684a0823cb55f89ef8afe1f33500'
+  'dca9056eb5e460ee6465de921a4b77524ebc7e6a83b964c629be525934910ef0'
   'c6e15e20c35897e653d80a5ce6b3b78700d8ff35052803401bb9b2c214c45bfc'
   'fffb49dff7063d788faf935d0176a8e6a156d9b2adf1dfc0912a3d0608f3f59e'
   '1be245b8ae6618c422a7d8b5b64bb0b8061e2f1138894a6ab6f9661492b5caf0'
@@ -53,6 +53,6 @@ package() {
   install -D -m 755 "$srcdir/mount.ovlroot" "$pkgdir/usr/bin/mount.ovlroot"
   mkdir -p "$pkgdir/usr/share/ovlroot"
   install -D -m 644 "$srcdir/ovlroot.sh" "$pkgdir/usr/share/ovlroot/ovlroot.sh"
-  install -D -m 644 "$srcdir/ovlroot-helper" "$pkgdir/usr/share/ovlroot/ovlroot-helper"
+  install -D -m 444 "$srcdir/ovlroot-helper" "$pkgdir/usr/share/ovlroot/ovlroot-helper"
   install -d -m 700 -o root -g root "$pkgdir/etc/ovlroot.d"
 }
