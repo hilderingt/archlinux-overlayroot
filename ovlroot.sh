@@ -111,6 +111,7 @@ OVLROOT_ROOT_FSTAB_OPTS="n"
 OVLROOT_ABORT_RO_ON_ERROR="n"
 OVLROOT_ASK_DISABLE=""
 OVLROOT_ASK_DISABLE_TO="15"
+OVLROOT_ASK_DISABLE_DEFAULT="n"
 OVLROOT_LIST_SEP=","
 OVLROOT_OVERLAY=""
 OVLROOT_DISABLE=""
@@ -149,7 +150,7 @@ _dir=""
 
 if   [ "x$OVLROOT_ASK_DISABLE" = "xlocal" ]; then
 	listen="-"
-	printf "%s" "Disable overlayroot? [y/N] "
+	printf "%s" "Disable overlayroot? [y/n] "
 elif [ "x$OVLROOT_ASK_DISABLE" = "xfifo" ]; then
 	if mkfifo "/tmp/disable.fifo"; then
 		listen="/tmp/disable.fifo"
@@ -163,14 +164,26 @@ elif [ "x$OVLROOT_ASK_DISABLE" = "xlocal+fifo" ]; then
 		push_undo_cmd rm -f "/tmp/disable.fifo"
 	fi
 
-	printf "%s" "Disable overlayroot? [y/N] "
+	printf "%s" "Disable overlayroot? [y/n] "
 fi
 
 if [ "x$listen" != "x" ]; then
 	answer="$(ovlroot-helper "${OVLROOT_ASK_DISABLE_TO:-"15"}" $listen)"
 
+	while [ "x$answer" != "x" ] || [ "$answer" != "y" ] || [ "$answer" != "Y" ] ||
+	      [ "$answer" != "n" ]  || [ "$answer" != "N" ]; do
+		printf "\n%s" "Disable overlayroot? [y/n] "
+	done
+
 	if [ "x$answer" = "xy" ] || [ "x$answer" = "xY" ]; then
 		exit 0
+	fi
+
+	if [ "x$answer" = "x" ]; then
+		if [ "x$OVLROOT_ASK_DISABLE_DEFAULT" = "xy" ]
+		   [ "x$OVLROOT_ASK_DISABLE_DEFAULT" = "xY" ]; then
+			exit 0
+		fi
 	fi
 fi
 

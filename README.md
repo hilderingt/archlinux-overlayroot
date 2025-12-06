@@ -63,6 +63,7 @@ write access is not needed and you want to protect it against changes.
 		- default value: `upperdir`
 	- `OVLROOT_WORK_DIR=<dirname>`
 		- relative path of the subdirectory needed by OverlayFS
+		- default value: `workdir`
 	- `OVLROOT_FSTAB=/<path>/<to>/<fstab>`
 		- absolute path to system's fstab
 		- default value: `/etc/fstab`
@@ -106,6 +107,11 @@ write access is not needed and you want to protect it against changes.
 		  have ssh access during initramfs stage
 		- you can simply write to the `fifo` and disable overlayroot 
 		- deactivated by default
+	- `OVLROOT_ASK_DISABLE_DEFAULT=<value>`
+		- default value if nothing is typed in at prompt for disabling overlayroot
+		- value should be `y` or `n`, but every other value than `y` is also treated
+		  as `n`
+		- default value: `n`
 	- `OVLROOT_ASK_DISABLE_TO=<timeout>`
 		- timeout in seconds for waiting for input by the user when asking for
 		  disabling overlayroot
