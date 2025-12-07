@@ -57,18 +57,23 @@ int read_line(int fd, char **buf, size_t bufsz) {
 
 		bp = &((*buf)[nused]);
 
-		nread = read(fd, bp, bufsz - nused);
-		if (nread == -1 && errno != EAGAIN)
+		errno = 0;
+		nread = read(fd, bp, 1);
+		if (nread > 0) {
+			if (*bp == '\n') {
+				*bp = '\0';
+				break;
+			}
+
+			++nused;
+			retries = 0;
+		} else if (!nread) {
+			return (0);
+		} else if (nread == -1 && errno != EAGAIN) {
 			return (1);
-
-		pos = strchr(bp, '\n');
-		if (pos != NULL) {
-			*pos = '\0';
-			break;
+		} else {
+			++retries;
 		}
-
-		nused += nread;
-		++retries;
 	}
 
 	return (0);

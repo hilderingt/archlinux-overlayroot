@@ -132,10 +132,11 @@ ovl_work_dir=""
 root_init_mode=""
 root_init_opts=""
 root_new_opts=""
+listen_stdin="n"
+listen_files=""
 modified="n"
 journal=""
 ovlopts=""
-listen=""
 answer=""
 fs=""
 dir="" 
@@ -149,30 +150,37 @@ _line=""
 _dir=""
 
 if   [ "x$OVLROOT_ASK_DISABLE" = "xlocal" ]; then
-	listen="-"
+	listen_files="-"
+	listen_stdin="y"
+
 	printf "%s" "Disable overlayroot? [y/n] "
 elif [ "x$OVLROOT_ASK_DISABLE" = "xfifo" ]; then
 	if mkfifo "/tmp/disable.fifo"; then
-		listen="/tmp/disable.fifo"
+		listen_files="/tmp/disable.fifo"
 		push_undo_cmd rm -f "/tmp/disable.fifo"
 	fi
 elif [ "x$OVLROOT_ASK_DISABLE" = "xlocal+fifo" ]; then
-	listen="-"
+	listen_files="-"
+	listen_stdin="y"
 
 	if mkfifo "/tmp/disable.fifo"; then
-		listen="$listen /tmp/disable.fifo"
+		listen_files="$listen_files /tmp/disable.fifo"
 		push_undo_cmd rm -f "/tmp/disable.fifo"
 	fi
 
 	printf "%s" "Disable overlayroot? [y/n] "
 fi
 
-if [ "x$listen" != "x" ]; then
-	answer="$(ovlroot-helper "${OVLROOT_ASK_DISABLE_TO:-"15"}" $listen)"
+if [ "x$listen_files" != "x" ]; then
+	answer="$(ovlroot-helper "${OVLROOT_ASK_DISABLE_TO:-"15"}" $listen_files)"
 
 	while [ "x$answer" != "x" ] || [ "$answer" != "y" ] || [ "$answer" != "Y" ] ||
 	      [ "$answer" != "n" ]  || [ "$answer" != "N" ]; do
-		printf "\n%s" "Disable overlayroot? [y/n] "
+		if [ "$listen_stdin" = "y" ]; then
+			printf "\n%s" "Disable overlayroot? [y/n] "
+		fi
+		
+		answer="$(ovlroot-helper "${OVLROOT_ASK_DISABLE_TO:-"15"}" $listen_files)"
 	done
 
 	if [ "x$answer" = "xy" ] || [ "x$answer" = "xY" ]; then
