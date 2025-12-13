@@ -29,8 +29,8 @@ makedepends=(
   'gcc'
 )
 optdepends=(
-  'initcpio-netconf'
-  'initcpio-dropbear'
+  'mkinitcpio-netconf'
+  'mkinitcpio-dropbear'
 )
 source=(
   'install.sh'
