@@ -76,8 +76,8 @@ write access is not needed and you want to protect it against changes.
 	- `OVLROOT_OVL_OPTS_ROOT=<opt>,...`
 		- options added to the mount options of the root overlay mount
 	- `OVLROOT_OVL_OPTS_OTHER=<opt>,...`
-		- ptions added to the mount options of the overlay mounts given
-		  in `OVLROOT_OVERLAY`.
+		- options added to the mount options of the overlay mounts given
+		  in `OVLROOT_OVERLAY`
 	- `OVLROOT_ROOT_FSTAB_OPTS=<value>`
 		- root filesystem is remounted with options listed in system's fstab
 		- ether `y` for `yes` or any other value for `no`
